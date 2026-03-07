@@ -1,0 +1,16 @@
+export enum TrackingEventType {
+  PAGE_VIEW = 'page_view',
+  PAGE_EXIT = 'page_exit',
+  CLICK = 'click',
+  SCROLL_DEPTH = 'scroll_depth',
+  VISIBILITY = 'visibility',
+  PERFORMANCE = 'performance',
+  SESSION_END = 'session_end',
+  CUSTOM = 'custom',
+  RAGE_CLICK = 'rage_click',
+  EXIT_INTENT = 'exit_intent',
+  FORM_START = 'form_start',
+  FORM_ABANDON = 'form_abandon',
+  FORM_SUBMIT = 'form_submit',
+  FORM_ERROR = 'form_error',
+}
