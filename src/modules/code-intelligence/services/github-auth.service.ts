@@ -5,12 +5,12 @@ import { DomainError } from 'src/common/exceptions/domain-error';
 
 /**
  * GitHub App Authentication Service
- * 
+ *
  * Responsibility: Generate GitHub App JWTs
  * These JWTs are used to:
  * 1. Exchange for installation access tokens
  * 2. Make API calls as the GitHub App itself
- * 
+ *
  * This is NOT OAuth (user authentication)
  * This is machine-to-machine authentication
  */
@@ -20,10 +20,10 @@ export class GithubAuthService {
 
   /**
    * Generate GitHub App JWT
-   * 
+   *
    * Valid for max 10 minutes
    * Used to exchange for installation tokens
-   * 
+   *
    * @returns JWT string
    */
   generateAppJwt(): string {
@@ -35,46 +35,42 @@ export class GithubAuthService {
         'GITHUB_APP_MISCONFIGURED',
         'GitHub App credentials not configured',
         'unexpected',
-        { missingFields: { appId: !appId, privateKey: !privateKey } }
+        { missingFields: { appId: !appId, privateKey: !privateKey } },
       );
     }
 
     try {
-      // Decode private key if base64 encoded
       const decodedKey = privateKey.includes('BEGIN')
         ? privateKey
         : Buffer.from(privateKey, 'base64').toString('utf-8');
 
       const now = Math.floor(Date.now() / 1000);
+      const iat = now - 10; // 10-second backdate
+      const exp = iat + 590; // 590 seconds after issue time
 
       return jwt.sign(
         {
-          // Token issue time (slightly backdated to prevent clock skew)
-          iat: now - 60,
-          
-          // Token expiry (max 10 minutes allowed by GitHub)
-          exp: now + 600,
-          
-          // GitHub App ID
+          iat,
+          exp,
           iss: appId,
         },
         decodedKey,
         {
           algorithm: 'RS256',
-        }
+        },
       );
     } catch (error) {
       throw new DomainError(
         'GITHUB_JWT_GENERATION_FAILED',
         `Failed to generate GitHub App JWT: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'unexpected'
+        'unexpected',
       );
     }
   }
 
   /**
    * Exchange App JWT for installation access token
-   * 
+   *
    * @param installationId GitHub App installation ID
    * @returns Access token string
    */
@@ -87,17 +83,17 @@ export class GithubAuthService {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${appJwt}`,
-            'Accept': 'application/vnd.github+json',
+            Authorization: `Bearer ${appJwt}`,
+            Accept: 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28',
           },
-        }
+        },
       );
 
       if (!response.ok) {
         const errorData = await response.text();
         throw new Error(
-          `GitHub API error: ${response.status} ${response.statusText} - ${errorData}`
+          `GitHub API error: ${response.status} ${response.statusText} - ${errorData}`,
         );
       }
 
@@ -107,7 +103,7 @@ export class GithubAuthService {
       throw new DomainError(
         'GITHUB_TOKEN_EXCHANGE_FAILED',
         `Failed to exchange App JWT for installation token: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'unexpected'
+        'unexpected',
       );
     }
   }

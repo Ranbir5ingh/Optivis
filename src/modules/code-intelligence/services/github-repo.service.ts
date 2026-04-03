@@ -85,7 +85,6 @@ export class GithubRepoService {
   > {
     try {
       const token = await this.githubAuth.getInstallationToken(installationId);
-
       const response = await fetch(
         'https://api.github.com/installation/repositories?per_page=100',
         {
